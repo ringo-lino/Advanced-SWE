@@ -18,6 +18,7 @@
 \usepackage{tabularx}
 \usepackage{enumitem}
 \usepackage{caption}
+\usepackage{float}
 \usepackage{listings}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,shapes.multipart,positioning,calc}
@@ -131,7 +132,7 @@
 
 \section*{Zusammenfassung}
 \addcontentsline{toc}{section}{Zusammenfassung}
-Das Decorator-Pattern ist ein objektbasiertes Strukturmuster aus dem Katalog der \enquote{Gang of Four}. Es erlaubt, einem Objekt zur Laufzeit zusätzliche Verantwortlichkeiten zuzuordnen, indem es von Hüllobjekten mit identischer Schnittstelle umgeben wird. Die vorliegende Ausarbeitung stellt Zweck, Struktur und Teilnehmer des Musters vor, erläutert es anhand von UML-Diagrammen sowie eines abstrakten und zweier konkreter Codebeispiele in Java und grenzt es gegenüber der Dekorator-Syntax in Python ab. Anschließend werden Vor- und Nachteile, Kritik und Alternativen diskutiert und das Muster von verwandten Mustern wie Adapter, Proxy, Composite, Strategy und Chain of Responsibility abgegrenzt. Das Ergebnis: Der Decorator ist ein bewährtes Mittel gegen Klassenexplosion und überladene Basisklassen, erkauft dies aber mit vielen kleinen Objekten und einer schwerer nachvollziehbaren Laufzeitstruktur.
+Das Decorator-Pattern ist ein objektbasiertes Strukturmuster aus dem Katalog der \enquote{Gang of Four}. Es erlaubt, einem Objekt zur Laufzeit zusätzliche Verantwortlichkeiten zuzuordnen, indem es von Hüllobjekten mit identischer Schnittstelle umgeben wird. Die vorliegende Ausarbeitung stellt Zweck, Struktur und Teilnehmer des Musters vor, erläutert es anhand von UML-Diagrammen sowie eines abstrakten und zweier konkreter Codebeispiele in Java und grenzt es gegenüber der Dekorator-Syntax in Python ab. Anschließend werden Vor- und Nachteile, Kritik und Alternativen diskutiert und das Muster von verwandten Mustern wie Adapter, Proxy, Composite, Strategy und Chain of Responsibility abgegrenzt. Das Ergebnis: Der Decorator ist ein bewährtes Mittel gegen Klassenexplosion und überladene Basisklassen, führt aber auch zu vielen kleinen Objekten und einer schwerer nachvollziehbaren Laufzeitstruktur.
 
 \clearpage
 \tableofcontents
@@ -171,7 +172,9 @@ Das Decorator-Pattern ist ein objektbasiertes Strukturmuster aus dem Katalog der
 \label{sec:einleitung}
 
 \subsection{Motivation}
-Objektorientierte Software soll erweiterbar sein, ohne dass bestehender, getesteter Code verändert werden muss. Das klassische Mittel zur Erweiterung ist die Vererbung. Sie ist jedoch statisch: Das Verhalten einer Klasse wird zur Übersetzungszeit festgelegt, und jede Kombination optionaler Eigenschaften erfordert eine eigene Unterklasse. Schon bei $n$ unabhängig kombinierbaren Zusatzfunktionen wären bis zu $2^n$ Varianten zu modellieren. Dieses Problem wird als \emph{Klassenexplosion} bezeichnet. Außerdem koppelt Vererbung Unter- und Oberklasse eng aneinander, was als \emph{fragile Basisklasse} bekannt ist \cite{MS98,Blo18}.
+Objektorientierte Software bündelt Daten und zugehörige Funktionen in Objekten und dient dazu, Anwendungen in zusammenarbeitende, überschaubare Bausteine zu strukturieren.
+
+Objektorientierte Software soll erweiterbar sein, ohne dass bestehender, getesteter Code verändert werden muss. Das klassische Mittel zur Erweiterung ist die Vererbung. Sie ist jedoch statisch: Das Verhalten einer Klasse wird zur Übersetzungszeit festgelegt, und jede Kombination optionaler Eigenschaften erfordert eine eigene Unterklasse. Schon bei $n$ unabhängig kombinierbaren Zusatzfunktionen wären bis zu $2^n$ Varianten zu modellieren. Dieses Problem wird als \emph{Klassenexplosion} bezeichnet. Außerdem koppelt Vererbung Unter- und Oberklasse eng aneinander. Änderungen an der Oberklasse können dadurch das Verhalten bestehender Unterklassen unbeabsichtigt beeinträchtigen; dies wird als Problem der \emph{fragilen Basisklasse} bezeichnet \cite{MS98,Blo18}.
 
 Das Decorator-Pattern löst dieses Problem durch Komposition statt Vererbung: Zusätzliches Verhalten wird in kleine, austauschbare Hüllobjekte ausgelagert, die zur Laufzeit beliebig kombiniert werden können \cite[S.~175--184]{GHJV94}.
 
@@ -180,6 +183,8 @@ Ziel der Arbeit ist eine kompakte, wissenschaftlich fundierte Darstellung des Pa
 
 \section{Grundlagen: Entwurfsmuster und Entwurfsprinzipien}
 \label{sec:grundlagen}
+
+Entwurfsmuster beschreiben bewährte Lösungsansätze für wiederkehrende Entwurfsprobleme und dienen als anpassbare Vorlagen, nicht als fertiger Programmcode.
 
 Der Begriff des Entwurfsmusters stammt ursprünglich aus der Architektur: Alexander et al.\ beschreiben wiederkehrende Lösungen für wiederkehrende Probleme in einer \enquote{Mustersprache} \cite{AIS77}. Beck und Cunningham übertrugen diese Idee 1987 auf die objektorientierte Programmierung (\acs{OOP}) \cite{BC87}. Breite Wirkung erzielte der 1994 erschienene Katalog von 23 Mustern von Gamma, Helm, Johnson und Vlissides, der als \enquote{Gang of Four} (\acs{GoF}) bekannt wurde \cite{GHJV94}. Er unterteilt die Muster nach ihrem Zweck in Erzeugungs-, Struktur- und Verhaltensmuster. Der Decorator gehört zu den \emph{Strukturmustern}, die beschreiben, wie Klassen und Objekte zu größeren Strukturen zusammengesetzt werden.
 
@@ -194,6 +199,8 @@ Drei Entwurfsprinzipien sind für das Verständnis des Decorators zentral:
 \label{sec:decorator}
 
 \subsection{Zweck und Motivation}
+Nicht jedes Objekt einer Klasse benötigt dieselben Zusatzfunktionen. Der Decorator ermöglicht es, einzelne Objekte gezielt zu erweitern, ohne dafür jeweils eine neue Unterklasse anzulegen.
+
 Nach \cite[S.~175]{GHJV94} besteht der Zweck des Patterns darin, einem Objekt dynamisch zusätzliche Verantwortlichkeiten zuzuordnen; Decorators bieten damit eine flexible Alternative zur Unterklassenbildung. Das Muster ist auch unter dem Namen \emph{Wrapper} bekannt. Das Standardbeispiel der \acs{GoF} ist eine GUI-Komponente (\texttt{TextView}), die wahlweise einen Rahmen oder Scrollbalken erhalten soll. Statt für jede Kombination eine Unterklasse anzulegen, wird die Komponente in einen \texttt{BorderDecorator} und/oder \texttt{ScrollDecorator} eingepackt.
 
 Das Muster ist nach \cite{GHJV94} anwendbar, wenn
@@ -203,6 +210,8 @@ Das Muster ist nach \cite{GHJV94} anwendbar, wenn
 \end{itemize}
 
 \subsection{Struktur und Teilnehmer}
+Das Muster besteht aus einer gemeinsamen Schnittstelle, einer konkreten Komponente und Decorators, die diese Komponente um zusätzliches Verhalten erweitern.
+
 \autoref{fig:uml} zeigt das Klassendiagramm des Musters in \ac{UML}-Notation, \autoref{tab:teilnehmer} ordnet die Rollen den Beispielen dieser Arbeit zu.
 
 \begin{figure}[tbp]
@@ -248,7 +257,7 @@ Das Muster ist nach \cite{GHJV94} anwendbar, wenn
   \end{tabularx}
 \end{table}
 
-Die zentrale Idee: Der \texttt{Decorator} implementiert dieselbe Schnittstelle wie die umhüllte \texttt{Component} \emph{und} hält eine Referenz auf sie. Für Clients ist ein dekoriertes Objekt daher nicht von einem undekorierten zu unterscheiden (Transparenz). Ein \texttt{ConcreteDecorator} ruft die Operation der umhüllten Komponente auf und ergänzt davor und/oder danach eigenes Verhalten. Da Decorators selbst \texttt{Component}s sind, lassen sie sich beliebig tief verschachteln.
+Die zentrale Idee: Der \texttt{Decorator} implementiert dieselbe Schnittstelle wie die umhüllte \texttt{Component} \emph{und} hält eine Referenz auf sie. Clients können dekorierte und undekorierte Objekte über dieselbe Schnittstelle verwenden (Transparenz). Ein \texttt{ConcreteDecorator} ruft die Operation der umhüllten Komponente auf und ergänzt davor und/oder danach eigenes Verhalten. Da Decorators selbst \texttt{Component}s sind, lassen sie sich beliebig tief verschachteln.
 
 \subsection{Zusammenspiel}
 \autoref{fig:objekte} veranschaulicht die Laufzeitstruktur am Beispiel einer Getränkebestellung: Ein Aufruf von \texttt{cost()} am äußersten Decorator wird schrittweise nach innen delegiert; die Ergebnisse werden auf dem Rückweg aufaddiert. Die Struktur entspricht damit einer Schichtung wie bei einer Zwiebel.
@@ -372,9 +381,11 @@ public class Kaffeebar {
 Für reale Preisberechnungen sollte statt \texttt{double} ein exakter Typ wie \texttt{BigDecimal} verwendet werden. Hier dient \texttt{double} nur der Übersichtlichkeit.
 
 \subsection{Die Java-Ein-/Ausgabe-Bibliothek}
-Ein prominentes Beispiel aus der Standardbibliothek ist das Paket \texttt{java.io}. Die abstrakte Klasse \texttt{FilterInputStream} umhüllt einen anderen \texttt{InputStream} und leitet Aufrufe an ihn weiter; ihre Unterklassen (z.\,B. \texttt{BufferedInputStream}, \texttt{DataInputStream}) ergänzen Pufferung bzw. das Lesen typisierter Daten \cite{ORA-FIS}. Die Ein-/Ausgabe (\acs{IO}) lässt sich so flexibel aus kleinen Bausteinen zusammensetzen (\autoref{fig:io} und \autoref{lst:io}).
+Das Decorator-Pattern wird nicht nur in Lehrbeispielen, sondern auch in verbreiteten Bibliotheken eingesetzt.
 
-\begin{figure}[tbp]
+Ein prominentes Beispiel aus der Standardbibliothek ist das Paket \texttt{java.io}. Die Klasse \texttt{FilterInputStream} umhüllt einen anderen \texttt{InputStream} und leitet Aufrufe an ihn weiter; ihre Unterklassen (z.\,B. \texttt{BufferedInputStream}, \texttt{DataInputStream}) ergänzen Pufferung bzw. das Lesen typisierter Daten \cite{ORA-FIS}. Die Ein-/Ausgabe (\acs{IO}) lässt sich so flexibel aus kleinen Bausteinen zusammensetzen. \autoref{fig:io} zeigt die Schichtung der beteiligten Streams; \autoref{lst:io} veranschaulicht ihre Verwendung beim Lesen typisierter Messwerte.
+
+\begin{figure}[H]
   \centering
   \begin{tikzpicture}[node distance=0.55cm]
     \node[box,draw=none,fill=none,text width=1.8cm] (app) {Anwendung};
@@ -385,7 +396,7 @@ Ein prominentes Beispiel aus der Standardbibliothek ist das Paket \texttt{java.i
     \foreach \a/\b in {app/dis,dis/bis,bis/fis,fis/file}
       \draw[-{Stealth}] (\a) -- (\b);
   \end{tikzpicture}
-  \caption{Verkettung von Decorators in \texttt{java.io}: Jeder \texttt{read()}-Aufruf wird von links nach rechts delegiert.}
+  \caption{Verkettung von Decorators in \texttt{java.io}: Leseanfragen werden bei Bedarf von links nach rechts delegiert.}
   \label{fig:io}
 \end{figure}
 
@@ -458,6 +469,8 @@ quadratsumme(1_000_000)
   \item \textbf{Vertragstreue:} Damit Decorators wirklich austauschbar sind, müssen sie das Liskovsche Substitutionsprinzip (\acs{LSP}) einhalten \cite{LW94}.
 \end{itemize}
 
+Für die Praxis sollten daher nicht nur einzelne Decorators, sondern auch ihre Kombinationen und Reihenfolgen getestet werden.
+
 \subsection{Kritik und Alternativen}
 Entwurfsmuster sind nicht unumstritten. Norvig argumentiert, dass 16 der 23 \acs{GoF}-Muster in dynamischen Sprachen wie Lisp oder Dylan unsichtbar oder deutlich einfacher sind, weil die Sprache die nötigen Mittel bereits bietet \cite{Nor96}. Muster seien insofern auch Hinweise auf Defizite einer Programmiersprache. Für den Decorator treffen ähnliche Überlegungen zu: Moderne Sprachen und Werkzeuge bieten Alternativen, die die Weiterleitungs-Boilerplate verringern oder das Muster ersetzen können:
 \begin{itemize}
@@ -473,7 +486,7 @@ Diese Alternativen lösen jeweils Teilaspekte; sie bieten jedoch nicht alle die 
 
 Decorator, Adapter und Proxy sind Wrapper-Muster: Alle umhüllen ein Objekt und leiten Aufrufe weiter, verfolgen aber unterschiedliche Absichten \cite{GHJV94}. \autoref{tab:abgrenzung} fasst die Unterschiede zusammen. Die \acs{GoF} beschreiben den Gegensatz zu Strategy anschaulich: Ein Decorator ändert die \enquote{Haut} eines Objekts, eine Strategy sein \enquote{Innenleben} \cite{GHJV94}.
 
-\begin{table}[tbp]
+\begin{table}[H]
   \centering
   \caption{Abgrenzung des Decorators von verwandten Mustern (nach \cite{GHJV94})}
   \label{tab:abgrenzung}
@@ -486,7 +499,7 @@ Decorator, Adapter und Proxy sind Wrapper-Muster: Alle umhüllen ein Objekt und 
     Proxy & gleiche Schnittstelle, umhüllt ein Objekt & steuert den Zugriff (z.\,B. Lazy Loading, Schutz, Fernzugriff); der Decorator fügt Verhalten hinzu \\
     Composite & rekursive Objektstruktur, gleiche Schnittstelle & Composite hat viele Kinder und fasst Objekte zusammen; der Decorator hat genau eine Komponente und erweitert sie \\
     Strategy & verändert das Verhalten eines Objekts & Strategy tauscht das \enquote{Innenleben} aus (Algorithmus), der Decorator ändert die \enquote{Hülle}; Strategy erfordert Erweiterungspunkte im Objekt \\
-    Chain of Responsibility & Verkettung von Objekten & dort kann ein Glied die Anfrage abschließend behandeln und die Kette abbrechen; ein Decorator reicht stets weiter \\
+    Chain of Responsibility & Verkettung von Objekten & dort kann ein Glied die Anfrage abschließend behandeln und die Kette abbrechen; ein Decorator reicht typischerweise weiter \\
     Template Method & Erweiterung von Verhalten & Variation per Vererbung statt per Komposition \\
     \bottomrule
   \end{tabularx}
