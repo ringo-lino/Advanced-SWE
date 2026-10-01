@@ -174,7 +174,7 @@ Das Decorator-Pattern ist ein objektbasiertes Strukturmuster aus dem Katalog der
 \subsection{Motivation}
 Objektorientierte Software bündelt Daten und zugehörige Funktionen in Objekten und dient dazu, Anwendungen in zusammenarbeitende, überschaubare Bausteine zu strukturieren.
 
-Objektorientierte Software soll erweiterbar sein, ohne dass bestehender, getesteter Code verändert werden muss. Das klassische Mittel zur Erweiterung ist die Vererbung. Sie ist jedoch statisch: Das Verhalten einer Klasse wird zur Übersetzungszeit festgelegt, und jede Kombination optionaler Eigenschaften erfordert eine eigene Unterklasse. Schon bei $n$ unabhängig kombinierbaren Zusatzfunktionen wären bis zu $2^n$ Varianten zu modellieren. Dieses Problem wird als \emph{Klassenexplosion} bezeichnet. Außerdem koppelt Vererbung Unter- und Oberklasse eng aneinander. Änderungen an der Oberklasse können dadurch das Verhalten bestehender Unterklassen unbeabsichtigt beeinträchtigen; dies wird als Problem der \emph{fragilen Basisklasse} bezeichnet \cite{MS98,Blo18}.
+Diese soll erweiterbar sein, ohne dass bestehender, getesteter Code verändert werden muss. Das klassische Mittel zur Erweiterung ist die Vererbung. Sie ist jedoch statisch: Das Verhalten einer Klasse wird zur Übersetzungszeit festgelegt, und jede Kombination optionaler Eigenschaften erfordert eine eigene Unterklasse. Schon bei $n$ unabhängig kombinierbaren Zusatzfunktionen wären bis zu $2^n$ Varianten zu modellieren. Dieses Problem wird als \emph{Klassenexplosion} bezeichnet. Außerdem koppelt Vererbung Unter- und Oberklasse eng aneinander. Änderungen an der Oberklasse können dadurch das Verhalten bestehender Unterklassen unbeabsichtigt beeinträchtigen; dies wird als Problem der \emph{fragilen Basisklasse} bezeichnet \cite{MS98,Blo18}.
 
 Das Decorator-Pattern löst dieses Problem durch Komposition statt Vererbung: Zusätzliches Verhalten wird in kleine, austauschbare Hüllobjekte ausgelagert, die zur Laufzeit beliebig kombiniert werden können \cite[S.~175--184]{GHJV94}.
 
@@ -184,7 +184,7 @@ Ziel der Arbeit ist eine kompakte, wissenschaftlich fundierte Darstellung des Pa
 \section{Grundlagen: Entwurfsmuster und Entwurfsprinzipien}
 \label{sec:grundlagen}
 
-Entwurfsmuster beschreiben bewährte Lösungsansätze für wiederkehrende Entwurfsprobleme und dienen als anpassbare Vorlagen, nicht als fertiger Programmcode.
+Entwurfsmuster zeigen, wie sich wiederkehrende Probleme beim Softwareentwurf lösen lassen; die konkrete Umsetzung wird an die jeweilige Anwendung angepasst.
 
 Der Begriff des Entwurfsmusters stammt ursprünglich aus der Architektur: Alexander et al.\ beschreiben wiederkehrende Lösungen für wiederkehrende Probleme in einer \enquote{Mustersprache} \cite{AIS77}. Beck und Cunningham übertrugen diese Idee 1987 auf die objektorientierte Programmierung (\acs{OOP}) \cite{BC87}. Breite Wirkung erzielte der 1994 erschienene Katalog von 23 Mustern von Gamma, Helm, Johnson und Vlissides, der als \enquote{Gang of Four} (\acs{GoF}) bekannt wurde \cite{GHJV94}. Er unterteilt die Muster nach ihrem Zweck in Erzeugungs-, Struktur- und Verhaltensmuster. Der Decorator gehört zu den \emph{Strukturmustern}, die beschreiben, wie Klassen und Objekte zu größeren Strukturen zusammengesetzt werden.
 
@@ -214,15 +214,15 @@ Das Muster besteht aus einer gemeinsamen Schnittstelle, einer konkreten Komponen
 
 \autoref{fig:uml} zeigt das Klassendiagramm des Musters in \ac{UML}-Notation, \autoref{tab:teilnehmer} ordnet die Rollen den Beispielen dieser Arbeit zu.
 
-\begin{figure}[tbp]
+\begin{figure}[H]
   \centering
   \begin{tikzpicture}[scale=0.92,transform shape]
     % Klassen
-    \node[uml] (comp) at (3.5,5) {\centering\textit{«interface»}\\\textbf{Component}
+    \node[uml] (comp) at (3.5,5) {\centering\textit{\guillemotleft{}interface\guillemotright{}}\\\textbf{Component}
       \nodepart{second}+\,operation()};
     \node[uml] (cc) at (-0.2,1.6) {\centering\textbf{ConcreteComponent}
       \nodepart{second}+\,operation()};
-    \node[uml,text width=4.6cm] (dec) at (7.7,1.6) {\centering\textit{«abstract»}\\\textbf{Decorator}
+    \node[uml,text width=4.6cm] (dec) at (7.7,1.6) {\centering\textit{\guillemotleft{}abstract\guillemotright{}}\\\textbf{Decorator}
       \nodepart{second}-\,component: Component\\+\,operation()};
     \node[uml] (da) at (5.9,-2.1) {\centering\textbf{ConcreteDecoratorA}
       \nodepart{second}-\,addedState\\+\,operation()};
@@ -240,7 +240,7 @@ Das Muster besteht aus einer gemeinsamen Schnittstelle, einer konkreten Komponen
   \label{fig:uml}
 \end{figure}
 
-\begin{table}[tbp]
+\begin{table}[H]
   \centering
   \caption{Rollen des Decorator-Patterns und ihre Entsprechungen in den Beispielen dieser Arbeit}
   \label{tab:teilnehmer}
@@ -262,7 +262,7 @@ Die zentrale Idee: Der \texttt{Decorator} implementiert dieselbe Schnittstelle w
 \subsection{Zusammenspiel}
 \autoref{fig:objekte} veranschaulicht die Laufzeitstruktur am Beispiel einer Getränkebestellung: Ein Aufruf von \texttt{cost()} am äußersten Decorator wird schrittweise nach innen delegiert; die Ergebnisse werden auf dem Rückweg aufaddiert. Die Struktur entspricht damit einer Schichtung wie bei einer Zwiebel.
 
-\begin{figure}[tbp]
+\begin{figure}[H]
   \centering
   \begin{tikzpicture}[font=\small]
     \draw[rounded corners=4pt,fill=black!4] (0,0) rectangle (10.5,4.3);
@@ -415,11 +415,14 @@ try (DataInputStream in = new DataInputStream(
 
 Das Beispiel zeigt auch, dass die \emph{Reihenfolge} der Decorators relevant sein kann: Beim Schreiben wird die äußerste Hülle zuerst durchlaufen. Werden Daten komprimiert und verschlüsselt, so muss erst komprimiert und dann verschlüsselt werden (\autoref{lst:reihenfolge}), da verschlüsselte Daten sich kaum noch komprimieren lassen.
 
+\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Java,caption={Reihenfolge der Decorators: erst komprimieren, dann verschlüsseln (\texttt{cipher} sei ein initialisiertes \texttt{javax.crypto.Cipher})},label={lst:reihenfolge}]
 OutputStream out = new GZIPOutputStream(
         new CipherOutputStream(
             new FileOutputStream("daten.bin"), cipher));
 \end{lstlisting}
+\end{minipage}
 
 Nicht jede Klasse in \texttt{java.io}, die etwas umhüllt, ist ein Decorator. Der \texttt{InputStreamReader}, der einen Byte-Strom in einen Zeichen-Strom überführt, ändert die Schnittstelle und ist daher ein \emph{Adapter} (vgl.\ \autoref{sec:verwandt}). Weitere Decorator-artige Wrapper im \ac{JDK} sind etwa \texttt{Collections.unmodifiableList} und \texttt{Collections.synchronizedList}, die eine Liste um Schreibschutz bzw. Synchronisation ergänzen.
 
@@ -472,6 +475,8 @@ quadratsumme(1_000_000)
 Für die Praxis sollten daher nicht nur einzelne Decorators, sondern auch ihre Kombinationen und Reihenfolgen getestet werden.
 
 \subsection{Kritik und Alternativen}
+Kritisch ist, dass der Decorator Komplexität teilweise nur verlagert: Statt vieler Unterklassen entstehen verschachtelte Objekte, deren Zusammensetzung und Reihenfolge nachvollzogen werden müssen. Bei wenigen, feststehenden Zusatzfunktionen kann dieser zusätzliche Aufwand den Nutzen des Musters übersteigen.
+
 Entwurfsmuster sind nicht unumstritten. Norvig argumentiert, dass 16 der 23 \acs{GoF}-Muster in dynamischen Sprachen wie Lisp oder Dylan unsichtbar oder deutlich einfacher sind, weil die Sprache die nötigen Mittel bereits bietet \cite{Nor96}. Muster seien insofern auch Hinweise auf Defizite einer Programmiersprache. Für den Decorator treffen ähnliche Überlegungen zu: Moderne Sprachen und Werkzeuge bieten Alternativen, die die Weiterleitungs-Boilerplate verringern oder das Muster ersetzen können:
 \begin{itemize}
   \item \textbf{Sprachgestützte Delegation:} Kotlin erlaubt über das Schlüsselwort \texttt{by}, eine Schnittstelle an ein Objekt zu delegieren, ohne die Methoden einzeln auszuschreiben \cite{KOTLIN}.
