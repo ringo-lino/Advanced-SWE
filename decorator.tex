@@ -1,0 +1,562 @@
+% !TEX program = pdflatex
+% Ausarbeitung: Das Decorator-Pattern
+% Übersetzen: pdflatex -> pdflatex -> pdflatex  (dreimal wegen Verzeichnissen/Akronymen)
+\documentclass[a4paper,11pt,toc=listof,toc=bibliography]{scrartcl}
+
+% ------------------------------------------------------------------
+% Pakete
+% ------------------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[ngerman]{babel}
+\usepackage{csquotes}
+\usepackage{microtype}
+\usepackage[a4paper,left=3cm,right=2.5cm,top=2.5cm,bottom=2.7cm]{geometry}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,shapes.multipart,positioning,calc}
+\usepackage[headsepline]{scrlayer-scrpage}
+\usepackage[hidelinks,pdftitle={Das Decorator-Pattern},pdfauthor={Vorname Nachname}]{hyperref}
+\usepackage[printonlyused]{acronym}
+
+\linespread{1.15}
+\setlist{itemsep=2pt,topsep=4pt}
+\captionsetup{font=small,labelfont=bf,format=hang}
+\setkomafont{disposition}{\normalfont\bfseries}
+
+% Kopf-/Fußzeile
+\pagestyle{scrheadings}
+\clearpairofpagestyles
+\ihead{Das Decorator-Pattern}
+\cfoot{\pagemark}
+
+% Namen für \autoref
+\renewcommand{\sectionautorefname}{Kapitel}
+\renewcommand{\subsectionautorefname}{Abschnitt}
+\providecommand{\lstlistingautorefname}{Listing}
+\renewcommand{\lstlistingname}{Listing}
+\renewcommand{\lstlistlistingname}{Listingverzeichnis}
+\renewcommand{\refname}{Literaturverzeichnis}
+\renewcommand{\listfigurename}{Abbildungsverzeichnis}
+\renewcommand{\listtablename}{Tabellenverzeichnis}
+
+% ------------------------------------------------------------------
+% Quellcode-Formatierung
+% ------------------------------------------------------------------
+\definecolor{kw}{RGB}{0,51,153}
+\definecolor{cm}{RGB}{0,110,60}
+\definecolor{st}{RGB}{160,40,40}
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\bfseries\color{kw},
+  commentstyle=\itshape\color{cm},
+  stringstyle=\color{st},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  numbersep=7pt,
+  frame=single,
+  rulecolor=\color{black!35},
+  xleftmargin=1.6em,
+  framexleftmargin=1.4em,
+  breaklines=true,
+  breakatwhitespace=false,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  tabsize=4,
+  captionpos=b,
+  float=tbp,
+  aboveskip=6pt,
+  belowskip=4pt,
+  extendedchars=true,
+  literate={ä}{{\"a}}1 {ö}{{\"o}}1 {ü}{{\"u}}1 {Ä}{{\"A}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1 {ß}{{\ss}}1
+}
+
+% ------------------------------------------------------------------
+% TikZ-Stile für UML
+% ------------------------------------------------------------------
+\tikzset{
+  uml/.style={draw,rectangle split,rectangle split parts=2,font=\footnotesize,
+              align=left,inner sep=4pt,fill=white,text width=3.1cm},
+  real/.style={dashed,-{Triangle[open,length=3mm,width=3mm]}},
+  gen/.style={-{Triangle[open,length=3mm,width=3mm]}},
+  agg/.style={{Diamond[open,length=3.5mm,width=2.4mm]}-{Stealth[length=2mm]}},
+  box/.style={draw,rounded corners=2pt,font=\scriptsize\ttfamily,align=center,
+              text width=2.2cm,minimum height=1cm,fill=white}
+}
+
+% ------------------------------------------------------------------
+% Metadaten
+% ------------------------------------------------------------------
+\newcommand{\titel}{Das Decorator-Pattern}
+\newcommand{\untertitel}{Ein Strukturmuster zur dynamischen Erweiterung von Objekten}
+\newcommand{\autor}{Vorname Nachname}
+\newcommand{\matrikel}{Matrikelnummer: 000000}
+
+\begin{document}
+
+% ==================================================================
+% Titelblatt (wird mitgezählt, aber nicht angezeigt)
+% ==================================================================
+\pagenumbering{roman}
+\begin{titlepage}
+  \centering
+  {\large Name der Hochschule\\Fakultät / Studiengang\par}
+  \vspace{1.5cm}
+  {\large Vorlesung: Software-Entwurf / Entwurfsmuster\\
+   Dozent/in: Prof.\ Dr.\ Name\par}
+  \vspace{3cm}
+  {\Huge\bfseries \titel\par}
+  \vspace{0.6cm}
+  {\Large \untertitel\par}
+  \vspace{1.2cm}
+  {\large Projektausarbeitung\par}
+  \vfill
+  {\large \autor\\ \matrikel\par}
+  \vspace{0.8cm}
+  {\large \today\par}
+\end{titlepage}
+
+% ==================================================================
+% Vorspann: römische Seitenzahlen (Titelblatt = I, nicht angezeigt)
+% ==================================================================
+\pagenumbering{roman}
+\setcounter{page}{2}
+
+\section*{Zusammenfassung}
+\addcontentsline{toc}{section}{Zusammenfassung}
+Das Decorator-Pattern ist ein objektbasiertes Strukturmuster aus dem Katalog der \enquote{Gang of Four}. Es erlaubt, einem Objekt zur Laufzeit zusätzliche Verantwortlichkeiten zuzuordnen, indem es von Hüllobjekten mit identischer Schnittstelle umgeben wird. Die vorliegende Ausarbeitung stellt Zweck, Struktur und Teilnehmer des Musters vor, erläutert es anhand von UML-Diagrammen sowie eines abstrakten und zweier konkreter Codebeispiele in Java und grenzt es gegenüber der Dekorator-Syntax in Python ab. Anschließend werden Vor- und Nachteile, Kritik und Alternativen diskutiert und das Muster von verwandten Mustern wie Adapter, Proxy, Composite, Strategy und Chain of Responsibility abgegrenzt. Das Ergebnis: Der Decorator ist ein bewährtes Mittel gegen Klassenexplosion und überladene Basisklassen, erkauft dies aber mit vielen kleinen Objekten und einer schwerer nachvollziehbaren Laufzeitstruktur.
+
+\clearpage
+\tableofcontents
+
+\clearpage
+\listoffigures
+
+\clearpage
+\listoftables
+
+\clearpage
+\lstlistoflistings
+
+\clearpage
+\section*{Abkürzungsverzeichnis}
+\addcontentsline{toc}{section}{Abkürzungsverzeichnis}
+\begin{acronym}[GoF]
+  \acro{AOP}{Aspektorientierte Programmierung}
+  \acro{GoF}{Gang of Four (Gamma, Helm, Johnson, Vlissides)}
+  \acro{IO}[I/O]{Input/Output (Ein-/Ausgabe)}
+  \acro{JDK}{Java Development Kit}
+  \acro{LSP}{Liskovsches Substitutionsprinzip}
+  \acro{OCP}{Open-Closed-Prinzip}
+  \acro{OOP}{Objektorientierte Programmierung}
+  \acro{PEP}{Python Enhancement Proposal}
+  \acro{SRP}{Single-Responsibility-Prinzip}
+  \acro{UML}{Unified Modeling Language}
+\end{acronym}
+
+% ==================================================================
+% Hauptteil: arabische Seitenzahlen ab Kapitel 1
+% ==================================================================
+\clearpage
+\pagenumbering{arabic}
+
+\section{Einleitung}
+\label{sec:einleitung}
+
+\subsection{Motivation}
+Objektorientierte Software soll erweiterbar sein, ohne dass bestehender, getesteter Code verändert werden muss. Das klassische Mittel zur Erweiterung ist die Vererbung. Sie ist jedoch statisch: Das Verhalten einer Klasse wird zur Übersetzungszeit festgelegt, und jede Kombination optionaler Eigenschaften erfordert eine eigene Unterklasse. Schon bei $n$ unabhängig kombinierbaren Zusatzfunktionen wären bis zu $2^n$ Varianten zu modellieren. Dieses Problem wird als \emph{Klassenexplosion} bezeichnet. Außerdem koppelt Vererbung Unter- und Oberklasse eng aneinander, was als \emph{fragile Basisklasse} bekannt ist \cite{MS98,Blo18}.
+
+Das Decorator-Pattern löst dieses Problem durch Komposition statt Vererbung: Zusätzliches Verhalten wird in kleine, austauschbare Hüllobjekte ausgelagert, die zur Laufzeit beliebig kombiniert werden können \cite[S.~175--184]{GHJV94}.
+
+\subsection{Zielsetzung und Aufbau}
+Ziel der Arbeit ist eine kompakte, wissenschaftlich fundierte Darstellung des Patterns. \autoref{sec:grundlagen} ordnet das Muster in die Geschichte der Entwurfsmuster und die zugrunde liegenden Entwurfsprinzipien ein. \autoref{sec:decorator} behandelt Zweck, Struktur und Verhalten samt abstraktem Codebeispiel. \autoref{sec:beispiele} zeigt konkrete Anwendungen in Java und Python. \autoref{sec:bewertung} bewertet das Muster kritisch, \autoref{sec:verwandt} grenzt es von verwandten Mustern ab, und \autoref{sec:fazit} fasst die Ergebnisse zusammen.
+
+\section{Grundlagen: Entwurfsmuster und Entwurfsprinzipien}
+\label{sec:grundlagen}
+
+Der Begriff des Entwurfsmusters stammt ursprünglich aus der Architektur: Alexander et al.\ beschreiben wiederkehrende Lösungen für wiederkehrende Probleme in einer \enquote{Mustersprache} \cite{AIS77}. Beck und Cunningham übertrugen diese Idee 1987 auf die objektorientierte Programmierung (\acs{OOP}) \cite{BC87}. Breite Wirkung erzielte der 1994 erschienene Katalog von 23 Mustern von Gamma, Helm, Johnson und Vlissides, der als \enquote{Gang of Four} (\acs{GoF}) bekannt wurde \cite{GHJV94}. Er unterteilt die Muster nach ihrem Zweck in Erzeugungs-, Struktur- und Verhaltensmuster. Der Decorator gehört zu den \emph{Strukturmustern}, die beschreiben, wie Klassen und Objekte zu größeren Strukturen zusammengesetzt werden.
+
+Drei Entwurfsprinzipien sind für das Verständnis des Decorators zentral:
+\begin{itemize}
+  \item \textbf{Komposition vor Vererbung.} Die \acs{GoF} empfehlen, gegen eine Schnittstelle zu programmieren und Objektkomposition der Klassenvererbung vorzuziehen \cite{GHJV94}. Bloch begründet dies ausführlich und nennt Wrapper-Klassen mit Weiterleitung (Delegation) als Alternative zur fehleranfälligen Vererbung \cite{Blo18}.
+  \item \textbf{Open-Closed-Prinzip (\acs{OCP}).} Software-Einheiten sollen offen für Erweiterung, aber geschlossen für Änderung sein \cite{Mey88,Mar03}.
+  \item \textbf{Single-Responsibility-Prinzip (\acs{SRP}).} Jede Klasse soll genau einen Grund zur Änderung haben \cite{Mar03}. Beim Decorator kapselt jede Hülle genau eine Zusatzaufgabe.
+\end{itemize}
+
+\section{Das Decorator-Pattern}
+\label{sec:decorator}
+
+\subsection{Zweck und Motivation}
+Nach \cite[S.~175]{GHJV94} besteht der Zweck des Patterns darin, einem Objekt dynamisch zusätzliche Verantwortlichkeiten zuzuordnen; Decorators bieten damit eine flexible Alternative zur Unterklassenbildung. Das Muster ist auch unter dem Namen \emph{Wrapper} bekannt. Das Standardbeispiel der \acs{GoF} ist eine GUI-Komponente (\texttt{TextView}), die wahlweise einen Rahmen oder Scrollbalken erhalten soll. Statt für jede Kombination eine Unterklasse anzulegen, wird die Komponente in einen \texttt{BorderDecorator} und/oder \texttt{ScrollDecorator} eingepackt.
+
+Das Muster ist nach \cite{GHJV94} anwendbar, wenn
+\begin{itemize}
+  \item Verantwortlichkeiten einzelnen Objekten dynamisch und transparent hinzugefügt oder wieder entzogen werden sollen, ohne andere Objekte zu beeinflussen,
+  \item eine Erweiterung durch Unterklassen unpraktikabel ist, etwa wegen einer Explosion der Klassenzahl, oder die Klasse nicht ableitbar ist (z.\,B. \texttt{final}).
+\end{itemize}
+
+\subsection{Struktur und Teilnehmer}
+\autoref{fig:uml} zeigt das Klassendiagramm des Musters in \ac{UML}-Notation, \autoref{tab:teilnehmer} ordnet die Rollen den Beispielen dieser Arbeit zu.
+
+\begin{figure}[tbp]
+  \centering
+  \begin{tikzpicture}[scale=0.92,transform shape]
+    % Klassen
+    \node[uml] (comp) at (3.5,5) {\centering\textit{«interface»}\\\textbf{Component}
+      \nodepart{second}+\,operation()};
+    \node[uml] (cc) at (-0.2,1.6) {\centering\textbf{ConcreteComponent}
+      \nodepart{second}+\,operation()};
+    \node[uml,text width=4.6cm] (dec) at (7.7,1.6) {\centering\textit{«abstract»}\\\textbf{Decorator}
+      \nodepart{second}-\,component: Component\\+\,operation()};
+    \node[uml] (da) at (5.9,-2.1) {\centering\textbf{ConcreteDecoratorA}
+      \nodepart{second}-\,addedState\\+\,operation()};
+    \node[uml] (db) at (9.6,-2.1) {\centering\textbf{ConcreteDecoratorB}
+      \nodepart{second}+\,operation()\\+\,addedBehavior()};
+    % Beziehungen
+    \draw[real] (cc.north) |- (comp.west);
+    \draw[real] (dec.north) |- ([yshift=-3mm]comp.east);
+    \draw[agg] (dec.north east) |- ([yshift=3mm]comp.east);
+    \node[font=\scriptsize,above] at ($(comp.east)+(2.9,0.3)$) {component};
+    \draw[gen] (da.north) -- (da.north |- dec.south);
+    \draw[gen] (db.north) -- (db.north |- dec.south);
+  \end{tikzpicture}
+  \caption{Klassendiagramm des Decorator-Patterns (nach \cite{GHJV94}). Gestrichelte Pfeile: Realisierung der Schnittstelle, Raute: Aggregation der umhüllten Komponente, durchgezogene Pfeile: Vererbung.}
+  \label{fig:uml}
+\end{figure}
+
+\begin{table}[tbp]
+  \centering
+  \caption{Rollen des Decorator-Patterns und ihre Entsprechungen in den Beispielen dieser Arbeit}
+  \label{tab:teilnehmer}
+  \small
+  \begin{tabularx}{\textwidth}{@{}l X X X@{}}
+    \toprule
+    \textbf{Rolle} & \textbf{Aufgabe} & \textbf{Getränkebeispiel} & \textbf{\texttt{java.io}} \\
+    \midrule
+    Component & gemeinsame Schnittstelle & \texttt{Beverage} & \texttt{InputStream} \\
+    ConcreteComponent & zu erweiterndes Objekt & \texttt{Espresso} & \texttt{FileInputStream} \\
+    Decorator & hält Referenz auf Component, leitet Aufrufe weiter & \texttt{CondimentDecorator} & \texttt{FilterInputStream} \\
+    ConcreteDecorator & fügt konkretes Verhalten hinzu & \texttt{Milk}, \texttt{Sugar} & \texttt{BufferedInputStream}, \texttt{DataInputStream} \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Die zentrale Idee: Der \texttt{Decorator} implementiert dieselbe Schnittstelle wie die umhüllte \texttt{Component} \emph{und} hält eine Referenz auf sie. Für Clients ist ein dekoriertes Objekt daher nicht von einem undekorierten zu unterscheiden (Transparenz). Ein \texttt{ConcreteDecorator} ruft die Operation der umhüllten Komponente auf und ergänzt davor und/oder danach eigenes Verhalten. Da Decorators selbst \texttt{Component}s sind, lassen sie sich beliebig tief verschachteln.
+
+\subsection{Zusammenspiel}
+\autoref{fig:objekte} veranschaulicht die Laufzeitstruktur am Beispiel einer Getränkebestellung: Ein Aufruf von \texttt{cost()} am äußersten Decorator wird schrittweise nach innen delegiert; die Ergebnisse werden auf dem Rückweg aufaddiert. Die Struktur entspricht damit einer Schichtung wie bei einer Zwiebel.
+
+\begin{figure}[tbp]
+  \centering
+  \begin{tikzpicture}[font=\small]
+    \draw[rounded corners=4pt,fill=black!4] (0,0) rectangle (10.5,4.3);
+    \node[anchor=north west] at (0.15,4.2) {\textbf{Sugar}\quad\texttt{cost() = beverage.cost() + 0,10}};
+    \draw[rounded corners=4pt,fill=black!10] (0.4,0.4) rectangle (10.1,3.4);
+    \node[anchor=north west] at (0.55,3.3) {\textbf{Milk}\quad\texttt{cost() = beverage.cost() + 0,30}};
+    \draw[rounded corners=4pt,fill=white] (0.8,0.8) rectangle (9.7,2.5);
+    \node[anchor=north west] at (0.95,2.4) {\textbf{Espresso}\quad\texttt{cost() = 1,99}};
+    \node at (-1.6,2.1) {Client};
+    \draw[-{Stealth}] (-0.9,2.3) -- node[above,font=\scriptsize\ttfamily]{cost()} (0,2.3);
+    \draw[{Stealth}-] (-0.9,1.9) -- node[below,font=\scriptsize]{2,39} (0,1.9);
+  \end{tikzpicture}
+  \caption{Objektdiagramm der Verschachtelung \texttt{Sugar(Milk(Espresso))}: Der Aufruf wird von außen nach innen delegiert, das Ergebnis (2,39) entsteht auf dem Rückweg.}
+  \label{fig:objekte}
+\end{figure}
+
+\subsection{Abstraktes Codebeispiel}
+\autoref{lst:abstrakt} zeigt das Muster in abstrakter Form in Java. Die Ausgabe \texttt{B(A(Basis))} macht die Reihenfolge der Verschachtelung sichtbar: Der zuletzt angelegte Decorator ist der äußerste und wird zuerst durchlaufen.
+
+\begin{lstlisting}[language=Java,caption={Abstrakte Implementierung des Decorator-Patterns in Java},label={lst:abstrakt}]
+interface Component {
+    String operation();
+}
+
+class ConcreteComponent implements Component {
+    public String operation() { return "Basis"; }
+}
+
+abstract class Decorator implements Component {
+    protected final Component component;
+
+    protected Decorator(Component component) {
+        this.component = component;
+    }
+
+    public String operation() {          // Standard: nur weiterleiten
+        return component.operation();
+    }
+}
+
+class ConcreteDecoratorA extends Decorator {
+    ConcreteDecoratorA(Component c) { super(c); }
+
+    public String operation() {
+        return "A(" + super.operation() + ")";
+    }
+}
+
+class ConcreteDecoratorB extends Decorator {
+    ConcreteDecoratorB(Component c) { super(c); }
+
+    public String operation() {
+        return "B(" + super.operation() + ")";
+    }
+}
+
+public class Demo {
+    public static void main(String[] args) {
+        Component c = new ConcreteDecoratorB(
+                new ConcreteDecoratorA(new ConcreteComponent()));
+        System.out.println(c.operation());   // Ausgabe: B(A(Basis))
+    }
+}
+\end{lstlisting}
+
+\section{Anwendungsbeispiele}
+\label{sec:beispiele}
+
+\subsection{Getränkebestellung in Java}
+Das Standardbeispiel aus der Lehrbuchliteratur \cite{FR20} modelliert eine Kaffeebar: Ein Getränk kann mit beliebigen Zutaten (Milch, Zucker, Sahne, \dots) bestellt werden, und der Preis ergibt sich aus Grundpreis und Zuschlägen. Mit Vererbung wären bereits für drei Zutaten sieben zusätzliche Unterklassen je Getränk nötig, mit dem Decorator genügt eine Klasse pro Zutat. \autoref{lst:kaffee} zeigt eine vollständige, lauffähige Umsetzung.
+
+\begin{lstlisting}[language=Java,caption={Getränkebestellung mit dem Decorator-Pattern (Datei \texttt{Kaffeebar.java})},label={lst:kaffee}]
+import java.util.Locale;
+import java.util.Objects;
+
+interface Beverage {                         // Component
+    String getDescription();
+    double cost();
+}
+
+class Espresso implements Beverage {         // ConcreteComponent
+    public String getDescription() { return "Espresso"; }
+    public double cost()           { return 1.99; }
+}
+
+abstract class CondimentDecorator implements Beverage {   // Decorator
+    protected final Beverage beverage;
+
+    protected CondimentDecorator(Beverage beverage) {
+        this.beverage = Objects.requireNonNull(beverage);
+    }
+}
+
+class Milk extends CondimentDecorator {      // ConcreteDecorator
+    Milk(Beverage b) { super(b); }
+    public String getDescription() { return beverage.getDescription() + ", Milch"; }
+    public double cost()           { return beverage.cost() + 0.30; }
+}
+
+class Sugar extends CondimentDecorator {     // ConcreteDecorator
+    Sugar(Beverage b) { super(b); }
+    public String getDescription() { return beverage.getDescription() + ", Zucker"; }
+    public double cost()           { return beverage.cost() + 0.10; }
+}
+
+public class Kaffeebar {
+    public static void main(String[] args) {
+        Beverage order = new Sugar(new Milk(new Espresso()));
+        System.out.println(order.getDescription() + ": "
+                + String.format(Locale.GERMANY, "%.2f EUR", order.cost()));
+        // Ausgabe: Espresso, Milch, Zucker: 2,39 EUR
+    }
+}
+\end{lstlisting}
+
+Für reale Preisberechnungen sollte statt \texttt{double} ein exakter Typ wie \texttt{BigDecimal} verwendet werden. Hier dient \texttt{double} nur der Übersichtlichkeit.
+
+\subsection{Die Java-Ein-/Ausgabe-Bibliothek}
+Ein prominentes Beispiel aus der Standardbibliothek ist das Paket \texttt{java.io}. Die abstrakte Klasse \texttt{FilterInputStream} umhüllt einen anderen \texttt{InputStream} und leitet Aufrufe an ihn weiter; ihre Unterklassen (z.\,B. \texttt{BufferedInputStream}, \texttt{DataInputStream}) ergänzen Pufferung bzw. das Lesen typisierter Daten \cite{ORA-FIS}. Die Ein-/Ausgabe (\acs{IO}) lässt sich so flexibel aus kleinen Bausteinen zusammensetzen (\autoref{fig:io} und \autoref{lst:io}).
+
+\begin{figure}[tbp]
+  \centering
+  \begin{tikzpicture}[node distance=0.55cm]
+    \node[box,draw=none,fill=none,text width=1.8cm] (app) {Anwendung};
+    \node[box,right=of app] (dis) {Data-\\InputStream};
+    \node[box,right=of dis] (bis) {Buffered-\\InputStream};
+    \node[box,right=of bis] (fis) {File-\\InputStream};
+    \node[box,draw=none,fill=none,text width=1.2cm,right=of fis] (file) {Datei};
+    \foreach \a/\b in {app/dis,dis/bis,bis/fis,fis/file}
+      \draw[-{Stealth}] (\a) -- (\b);
+  \end{tikzpicture}
+  \caption{Verkettung von Decorators in \texttt{java.io}: Jeder \texttt{read()}-Aufruf wird von links nach rechts delegiert.}
+  \label{fig:io}
+\end{figure}
+
+\begin{lstlisting}[language=Java,caption={Verschachtelte Stream-Decorators (innerhalb einer Methode mit \texttt{throws IOException})},label={lst:io}]
+try (DataInputStream in = new DataInputStream(
+        new BufferedInputStream(
+            new FileInputStream("messwerte.bin")))) {
+    int anzahl = in.readInt();
+    double summe = 0;
+    for (int i = 0; i < anzahl; i++) {
+        summe += in.readDouble();
+    }
+    System.out.println("Mittelwert: " + summe / anzahl);
+}
+\end{lstlisting}
+
+Das Beispiel zeigt auch, dass die \emph{Reihenfolge} der Decorators relevant sein kann: Beim Schreiben wird die äußerste Hülle zuerst durchlaufen. Werden Daten komprimiert und verschlüsselt, so muss erst komprimiert und dann verschlüsselt werden (\autoref{lst:reihenfolge}), da verschlüsselte Daten sich kaum noch komprimieren lassen.
+
+\begin{lstlisting}[language=Java,caption={Reihenfolge der Decorators: erst komprimieren, dann verschlüsseln (\texttt{cipher} sei ein initialisiertes \texttt{javax.crypto.Cipher})},label={lst:reihenfolge}]
+OutputStream out = new GZIPOutputStream(
+        new CipherOutputStream(
+            new FileOutputStream("daten.bin"), cipher));
+\end{lstlisting}
+
+Nicht jede Klasse in \texttt{java.io}, die etwas umhüllt, ist ein Decorator. Der \texttt{InputStreamReader}, der einen Byte-Strom in einen Zeichen-Strom überführt, ändert die Schnittstelle und ist daher ein \emph{Adapter} (vgl.\ \autoref{sec:verwandt}). Weitere Decorator-artige Wrapper im \ac{JDK} sind etwa \texttt{Collections.unmodifiableList} und \texttt{Collections.synchronizedList}, die eine Liste um Schreibschutz bzw. Synchronisation ergänzen.
+
+\subsection{Abgrenzung: Dekorator-Syntax in Python}
+Python bietet mit der \texttt{@}-Syntax eine Spracheigenschaft, die ebenfalls \enquote{Decorator} heißt. Sie wurde mit \ac{PEP}~318 in Python~2.4 eingeführt \cite{PEP318}. Ein solcher Decorator ist eine Funktion höherer Ordnung, die eine Funktion (oder Klasse) bei ihrer Definition durch eine umhüllende Variante ersetzt (\autoref{lst:python}). Die Idee -- Verhalten transparent um einen bestehenden Aufruf zu legen -- ist verwandt. Das GoF-Pattern arbeitet jedoch auf \emph{Objekten} und deren Schnittstelle zur Laufzeit, während die Python-Syntax eine Kurzschreibweise für das Ersetzen von Funktionen ist. Die Dienstfunktion \texttt{functools.wraps} übernimmt Metadaten wie Name und Docstring in den Wrapper \cite{PYFT}.
+
+\begin{lstlisting}[language=Python,caption={Python-Funktionsdekorator zur Zeitmessung},label={lst:python}]
+import functools
+import time
+
+def timed(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        try:
+            return func(*args, **kwargs)
+        finally:
+            dauer = time.perf_counter() - start
+            print(f"{func.__name__}: {dauer:.4f} s")
+    return wrapper
+
+@timed
+def quadratsumme(n):
+    return sum(i * i for i in range(n))
+
+quadratsumme(1_000_000)
+\end{lstlisting}
+
+\section{Bewertung}
+\label{sec:bewertung}
+
+\subsection{Vorteile}
+\begin{itemize}
+  \item \textbf{Flexibilität:} Verhalten wird zur Laufzeit zugefügt, entfernt und kombiniert. Das ist flexibler als statische Vererbung \cite{GHJV94}.
+  \item \textbf{Vermeidung von Klassenexplosion und überladenen Basisklassen:} Mit $n$ Zusatzfunktionen genügen $n$ Decorator-Klassen statt bis zu $2^n$ Unterklassen. Funktionsreiche Klassen weit oben in der Hierarchie werden vermieden \cite{GHJV94}.
+  \item \textbf{\acs{SRP} und \acs{OCP}:} Jeder Decorator hat genau eine Aufgabe, bestehender Code bleibt unverändert \cite{Mar03}.
+  \item \textbf{Transparenz:} Clients arbeiten gegen die Schnittstelle \texttt{Component} und kennen die Dekoration nicht.
+\end{itemize}
+
+\subsection{Nachteile}
+\begin{itemize}
+  \item \textbf{Viele kleine Objekte und Klassen:} Systeme werden zwar leicht anpassbar, aber schwer zu überblicken und zu debuggen, da Aufrufe viele Schichten durchlaufen \cite{GHJV94}.
+  \item \textbf{Objektidentität:} Ein Decorator ist nicht identisch mit der umhüllten Komponente. Identitätsvergleiche (\texttt{==}) und Typprüfungen (\texttt{instanceof}) liefern unerwartete Ergebnisse \cite{GHJV94}.
+  \item \textbf{Reihenfolgeabhängigkeit:} Wie in \autoref{lst:reihenfolge} gezeigt, kann die Verkettung das Ergebnis verändern.
+  \item \textbf{Schwierige Entfernung:} Einzelne Decorators aus der Mitte einer Kette zu entfernen ist umständlich.
+  \item \textbf{Boilerplate:} Bei breiten Schnittstellen muss jeder Decorator viele Methoden bloß weiterleiten. Die \acs{GoF} raten deshalb, die \texttt{Component}-Schnittstelle schlank zu halten \cite{GHJV94}.
+  \item \textbf{Vertragstreue:} Damit Decorators wirklich austauschbar sind, müssen sie das Liskovsche Substitutionsprinzip (\acs{LSP}) einhalten \cite{LW94}.
+\end{itemize}
+
+\subsection{Kritik und Alternativen}
+Entwurfsmuster sind nicht unumstritten. Norvig argumentiert, dass 16 der 23 \acs{GoF}-Muster in dynamischen Sprachen wie Lisp oder Dylan unsichtbar oder deutlich einfacher sind, weil die Sprache die nötigen Mittel bereits bietet \cite{Nor96}. Muster seien insofern auch Hinweise auf Defizite einer Programmiersprache. Für den Decorator treffen ähnliche Überlegungen zu: Moderne Sprachen und Werkzeuge bieten Alternativen, die die Weiterleitungs-Boilerplate verringern oder das Muster ersetzen können:
+\begin{itemize}
+  \item \textbf{Sprachgestützte Delegation:} Kotlin erlaubt über das Schlüsselwort \texttt{by}, eine Schnittstelle an ein Objekt zu delegieren, ohne die Methoden einzeln auszuschreiben \cite{KOTLIN}.
+  \item \textbf{Dynamische Proxies:} In Java kann \texttt{java.lang.reflect.Proxy} Weiterleitungen zur Laufzeit erzeugen \cite{ORA-PROXY}.
+  \item \textbf{Mixins und Traits:} Sie fügen Verhalten per Klassenkomposition hinzu, allerdings statisch pro Klasse und nicht pro Objekt \cite{BC90}.
+  \item \textbf{Aspektorientierte Programmierung (\acs{AOP}):} Querschnittsbelange wie Logging oder Transaktionen werden zentral in Aspekten gebündelt statt in Hüllklassen \cite{Kic97}.
+\end{itemize}
+Diese Alternativen lösen jeweils Teilaspekte; sie bieten jedoch nicht alle die Möglichkeit, Verhalten pro Objekt und zur Laufzeit zu wählen. Der Decorator bleibt deshalb dort sinnvoll, wo genau dies verlangt ist.
+
+\section{Verwandte Muster und Abgrenzung}
+\label{sec:verwandt}
+
+Decorator, Adapter und Proxy sind Wrapper-Muster: Alle umhüllen ein Objekt und leiten Aufrufe weiter, verfolgen aber unterschiedliche Absichten \cite{GHJV94}. \autoref{tab:abgrenzung} fasst die Unterschiede zusammen. Die \acs{GoF} beschreiben den Gegensatz zu Strategy anschaulich: Ein Decorator ändert die \enquote{Haut} eines Objekts, eine Strategy sein \enquote{Innenleben} \cite{GHJV94}.
+
+\begin{table}[tbp]
+  \centering
+  \caption{Abgrenzung des Decorators von verwandten Mustern (nach \cite{GHJV94})}
+  \label{tab:abgrenzung}
+  \small
+  \begin{tabularx}{\textwidth}{@{}l X X@{}}
+    \toprule
+    \textbf{Muster} & \textbf{Gemeinsamkeit mit Decorator} & \textbf{Unterschied} \\
+    \midrule
+    Adapter & umhüllt ein Objekt & ändert die Schnittstelle; der Decorator behält sie bei \\
+    Proxy & gleiche Schnittstelle, umhüllt ein Objekt & steuert den Zugriff (z.\,B. Lazy Loading, Schutz, Fernzugriff); der Decorator fügt Verhalten hinzu \\
+    Composite & rekursive Objektstruktur, gleiche Schnittstelle & Composite hat viele Kinder und fasst Objekte zusammen; der Decorator hat genau eine Komponente und erweitert sie \\
+    Strategy & verändert das Verhalten eines Objekts & Strategy tauscht das \enquote{Innenleben} aus (Algorithmus), der Decorator ändert die \enquote{Hülle}; Strategy erfordert Erweiterungspunkte im Objekt \\
+    Chain of Responsibility & Verkettung von Objekten & dort kann ein Glied die Anfrage abschließend behandeln und die Kette abbrechen; ein Decorator reicht stets weiter \\
+    Template Method & Erweiterung von Verhalten & Variation per Vererbung statt per Komposition \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+In der Praxis treten die Muster oft kombiniert auf: So lässt sich ein Composite mit Decorators um Zusatzverhalten für einzelne Knoten ergänzen, und ein Proxy kann strukturell wie ein Decorator aufgebaut sein. Die Abgrenzung erfolgt dann über die \emph{Absicht}, nicht über die Struktur \cite{GHJV94}.
+
+\section{Fazit}
+\label{sec:fazit}
+
+Das Decorator-Pattern ist ein bewährtes Mittel, Objekten zur Laufzeit Verantwortlichkeiten hinzuzufügen, ohne Klassen zu verändern oder eine Vielzahl von Unterklassen anzulegen. Es setzt die Prinzipien \enquote{Komposition vor Vererbung}, \acs{OCP} und \acs{SRP} konsequent um und ist in der Praxis, etwa in \texttt{java.io}, weit verbreitet. Dem stehen eine unübersichtliche Laufzeitstruktur, Identitätsprobleme, Reihenfolgeabhängigkeiten und Weiterleitungs-Boilerplate gegenüber. Sprachmittel wie Delegation, dynamische Proxies, Mixins oder \acs{AOP} können je nach Kontext Teilaufgaben des Musters übernehmen. Empfehlenswert ist der Decorator vor allem bei schlanken Schnittstellen und wenn Zusatzverhalten pro Objekt und zur Laufzeit kombinierbar sein soll. Bei breiten Schnittstellen und statisch feststehender Funktionalität sind Alternativen häufig einfacher.
+
+% ==================================================================
+% Literaturverzeichnis
+% ==================================================================
+\clearpage
+\begin{thebibliography}{GHJV94}
+\setlength{\itemsep}{4pt}
+
+\bibitem[AIS77]{AIS77}
+Alexander, C.; Ishikawa, S.; Silverstein, M.: \emph{A Pattern Language: Towns, Buildings, Construction}. Oxford University Press, New York, 1977.
+
+\bibitem[BC87]{BC87}
+Beck, K.; Cunningham, W.: Using Pattern Languages for Object-Oriented Programs. Beitrag zum OOPSLA'87 Workshop on Specification and Design for Object-Oriented Programming, 1987.
+
+\bibitem[Blo18]{Blo18}
+Bloch, J.: \emph{Effective Java}. 3.\ Aufl., Addison-Wesley, Boston, 2018 (insb.\ Item~18: Favor composition over inheritance).
+
+\bibitem[BC90]{BC90}
+Bracha, G.; Cook, W.: Mixin-based inheritance. In: \emph{Proceedings of OOPSLA/ECOOP '90}, ACM, 1990, S.~303--311.
+
+\bibitem[FR20]{FR20}
+Freeman, E.; Robson, E.: \emph{Head First Design Patterns}. 2.\ Aufl., O'Reilly Media, Sebastopol, 2020.
+
+\bibitem[GHJV94]{GHJV94}
+Gamma, E.; Helm, R.; Johnson, R.; Vlissides, J.: \emph{Design Patterns: Elements of Reusable Object-Oriented Software}. Addison-Wesley, Reading, 1994 (Kapitel~4: Decorator, S.~175--184).
+
+\bibitem[Kic97]{Kic97}
+Kiczales, G.; Lamping, J.; Mendhekar, A.; Maeda, C.; Lopes, C.; Loingtier, J.-M.; Irwin, J.: Aspect-Oriented Programming. In: \emph{ECOOP '97}, LNCS 1241, Springer, 1997, S.~220--242.
+
+\bibitem[KOTLIN]{KOTLIN}
+JetBrains: Kotlin Documentation -- Delegation. \url{https://kotlinlang.org/docs/delegation.html}, abgerufen am 01.10.2026.
+
+\bibitem[LW94]{LW94}
+Liskov, B. H.; Wing, J. M.: A Behavioral Notion of Subtyping. \emph{ACM Transactions on Programming Languages and Systems} 16(6), 1994, S.~1811--1841.
+
+\bibitem[Mar03]{Mar03}
+Martin, R. C.: \emph{Agile Software Development: Principles, Patterns, and Practices}. Prentice Hall, Upper Saddle River, 2003.
+
+\bibitem[Mey88]{Mey88}
+Meyer, B.: \emph{Object-Oriented Software Construction}. Prentice Hall, 1988 (2.\ Aufl. 1997).
+
+\bibitem[MS98]{MS98}
+Mikhajlov, L.; Sekerinski, E.: A Study of the Fragile Base Class Problem. In: \emph{ECOOP '98}, LNCS 1445, Springer, 1998, S.~355--382.
+
+\bibitem[Nor96]{Nor96}
+Norvig, P.: Design Patterns in Dynamic Programming. Vortrag auf der Object World, Boston, 1996.
+
+\bibitem[ORA-FIS]{ORA-FIS}
+Oracle: Java SE API Documentation -- \texttt{java.io.FilterInputStream}. \url{https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/io/FilterInputStream.html}, abgerufen am 01.10.2026.
+
+\bibitem[ORA-PROXY]{ORA-PROXY}
+Oracle: Java SE API Documentation -- \texttt{java.lang.reflect.Proxy}. \url{https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/reflect/Proxy.html}, abgerufen am 01.10.2026.
+
+\bibitem[PEP318]{PEP318}
+Smith, K. D.; Jewett, J.; Montanaro, S.; Baxter, A.: PEP 318 -- Decorators for Functions and Methods. Python Software Foundation, 2003. \url{https://peps.python.org/pep-0318/}, abgerufen am 01.10.2026.
+
+\bibitem[PYFT]{PYFT}
+Python Software Foundation: \texttt{functools} -- Higher-order functions and operations on callable objects. Python Documentation. \url{https://docs.python.org/3/library/functools.html}, abgerufen am 01.10.2026.
+
+\end{thebibliography}
+
+\end{document}

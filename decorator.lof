@@ -1,0 +1,5 @@
+\babel@toc {ngerman}{}\relax 
+\contentsline {figure}{\numberline {1}{\ignorespaces Klassendiagramm des Decorator-Patterns (nach \cite {GHJV94}). Gestrichelte Pfeile: Realisierung der Schnittstelle, Raute: Aggregation der umhüllten Komponente, durchgezogene Pfeile: Vererbung.}}{2}{figure.caption.9}%
+\contentsline {figure}{\numberline {2}{\ignorespaces Objektdiagramm der Verschachtelung \texttt {Sugar(Milk(Espresso))}: Der Aufruf wird von außen nach innen delegiert, das Ergebnis (2,39) entsteht auf dem Rückweg.}}{3}{figure.caption.11}%
+\contentsline {figure}{\numberline {3}{\ignorespaces Verkettung von Decorators in \texttt {java.io}: Jeder \texttt {read()}-Aufruf wird von links nach rechts delegiert.}}{5}{figure.caption.13}%
+\providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 
